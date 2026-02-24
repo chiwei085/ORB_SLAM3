@@ -11,14 +11,28 @@ endif()
 
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+set(_ORBROS_SANITIZER_FLAGS_COMBINED "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS}")
+string(FIND "${_ORBROS_SANITIZER_FLAGS_COMBINED}" "-fsanitize=" _ORBROS_SANITIZER_POS)
+if(_ORBROS_SANITIZER_POS EQUAL -1)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall   -O3")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3")
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -march=native")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -march=native")
+else()
+  message(STATUS "ORBROS sanitizer build detected: skipping ORB_SLAM3 hardcoded -O3/-march=native")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+endif()
 
 # ORB_SLAM3 examples gate some codepaths on this legacy macro name.
 add_definitions(-DCOMPILEDWITHC11)
 message(STATUS "Using C++ standard ${CMAKE_CXX_STANDARD}.")
+
+option(ORBROS_BUILD_ORB_SLAM3_EXAMPLES "Build upstream ORB_SLAM3 example binaries" ON)
+if(_ORBROS_SANITIZER_POS GREATER -1)
+  set(ORBROS_BUILD_ORB_SLAM3_EXAMPLES OFF CACHE BOOL "" FORCE)
+  message(STATUS "ORBROS sanitizer build: disabling ORB_SLAM3 examples to reduce build memory")
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
@@ -133,6 +147,7 @@ endif()
 # Build examples
 
 # RGB-D examples
+if(ORBROS_BUILD_ORB_SLAM3_EXAMPLES)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/RGB-D)
 
 add_executable(rgbd_tum
@@ -380,5 +395,6 @@ if(realsense2_FOUND)
 
     add_executable(stereo_inertial_realsense_D435i_old
             Examples_old/Stereo-Inertial/stereo_inertial_realsense_D435i.cc)
-    target_link_libraries(stereo_inertial_realsense_D435i_old ${PROJECT_NAME})
+target_link_libraries(stereo_inertial_realsense_D435i_old ${PROJECT_NAME})
+endif()
 endif()
