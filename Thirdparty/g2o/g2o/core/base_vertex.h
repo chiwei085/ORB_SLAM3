@@ -37,13 +37,11 @@
 #include <Eigen/StdVector>
 #include <stack>
 
+#include "eigen_compat.h"
+
 namespace g2o {
 
   using namespace Eigen;
-
-  // Eigen::AlignedBit is deprecated in newer Eigen.
-  // Keep the historical bit value to preserve semantics without referencing the deprecated name.
-  inline constexpr unsigned kEigenAlignedBit = 0x80u;
 
 
 /**

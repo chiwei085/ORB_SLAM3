@@ -32,15 +32,12 @@
 
 #include "base_edge.h"
 #include "robust_kernel.h"
+#include "eigen_compat.h"
 #include "../../config.h"
 
 namespace g2o {
 
   using namespace Eigen;
-
-  // Eigen::AlignedBit is deprecated in newer Eigen.
-  // Keep the historical bit value to preserve semantics without referencing the deprecated name.
-  inline constexpr unsigned kEigenAlignedBit = 0x80u;
 
   template <int D, typename E, typename VertexXi, typename VertexXj>
   class BaseBinaryEdge : public BaseEdge<D, E>
