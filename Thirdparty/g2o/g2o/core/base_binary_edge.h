@@ -38,6 +38,10 @@ namespace g2o {
 
   using namespace Eigen;
 
+  // Eigen::AlignedBit is deprecated in newer Eigen.
+  // Keep the historical bit value to preserve semantics without referencing the deprecated name.
+  inline constexpr unsigned kEigenAlignedBit = 0x80u;
+
   template <int D, typename E, typename VertexXi, typename VertexXj>
   class BaseBinaryEdge : public BaseEdge<D, E>
   {
@@ -56,8 +60,12 @@ namespace g2o {
       typedef typename BaseEdge<D,E>::ErrorVector ErrorVector;
       typedef typename BaseEdge<D,E>::InformationType InformationType;
 
-      typedef Eigen::Map<Matrix<double, Di, Dj>, Matrix<double, Di, Dj>::Flags & AlignedBit ? Aligned : Unaligned > HessianBlockType;
-      typedef Eigen::Map<Matrix<double, Dj, Di>, Matrix<double, Dj, Di>::Flags & AlignedBit ? Aligned : Unaligned > HessianBlockTransposedType;
+      typedef Eigen::Map<Matrix<double, Di, Dj>,
+          Matrix<double, Di, Dj>::Flags & kEigenAlignedBit ? Aligned : Unaligned>
+          HessianBlockType;
+      typedef Eigen::Map<Matrix<double, Dj, Di>,
+          Matrix<double, Dj, Di>::Flags & kEigenAlignedBit ? Aligned : Unaligned>
+          HessianBlockTransposedType;
 
       BaseBinaryEdge() : BaseEdge<D,E>(),
       _hessianRowMajor(false),

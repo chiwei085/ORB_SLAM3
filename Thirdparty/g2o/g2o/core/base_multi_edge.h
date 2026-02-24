@@ -41,6 +41,10 @@ namespace g2o {
 
   using namespace Eigen;
 
+  // Eigen::AlignedBit is deprecated in newer Eigen.
+  // Keep the historical bit value to preserve semantics without referencing the deprecated name.
+  inline constexpr unsigned kEigenAlignedBit = 0x80u;
+
   /**
    * \brief base class to represent an edge connecting an arbitrary number of nodes
    *
@@ -66,7 +70,9 @@ namespace g2o {
       typedef MatrixXd::MapType JacobianType;
       typedef typename BaseEdge<D,E>::ErrorVector ErrorVector;
       typedef typename BaseEdge<D,E>::InformationType InformationType;
-      typedef Eigen::Map<MatrixXd, MatrixXd::Flags & AlignedBit ? Aligned : Unaligned > HessianBlockType;
+      typedef Eigen::Map<MatrixXd,
+          MatrixXd::Flags & kEigenAlignedBit ? Aligned : Unaligned>
+          HessianBlockType;
 
       BaseMultiEdge() : BaseEdge<D,E>()
       {

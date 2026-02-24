@@ -41,6 +41,10 @@ namespace g2o {
 
   using namespace Eigen;
 
+  // Eigen::AlignedBit is deprecated in newer Eigen.
+  // Keep the historical bit value to preserve semantics without referencing the deprecated name.
+  inline constexpr unsigned kEigenAlignedBit = 0x80u;
+
 
 /**
  * \brief Templatized BaseVertex
@@ -59,7 +63,9 @@ namespace g2o {
 
     static const int Dimension = D;           ///< dimension of the estimate (minimal) in the manifold space
 
-    typedef Eigen::Map<Matrix<double, D, D>, Matrix<double,D,D>::Flags & AlignedBit ? Aligned : Unaligned >  HessianBlockType;
+    typedef Eigen::Map<Matrix<double, D, D>,
+        Matrix<double, D, D>::Flags & kEigenAlignedBit ? Aligned : Unaligned>
+        HessianBlockType;
 
   public:
     BaseVertex();
