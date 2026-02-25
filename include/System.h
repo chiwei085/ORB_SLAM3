@@ -189,6 +189,7 @@ public:
     // Access underlying Atlas (read-only usage expected from wrappers/tools).
     auto GetAtlas() -> ORB_SLAM3::Atlas*;
     auto GetAtlas() const -> const ORB_SLAM3::Atlas*;
+    auto LoadAtlasFromFile(const std::string& filename) -> bool;
 
 #ifdef REGISTER_TIMES
     void InsertRectTime(double& time);

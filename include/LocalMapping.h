@@ -47,6 +47,7 @@ public:
     void SetLoopCloser(LoopClosing* pLoopCloser);
 
     void SetTracker(Tracking* pTracker);
+    void SetAtlas(Atlas* pAtlas) { mpAtlas = pAtlas; }
 
     // Main function
     void Run();

@@ -42,6 +42,7 @@ class FrameDrawer
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     FrameDrawer(Atlas* pAtlas);
+    void SetAtlas(Atlas* pAtlas) { mpAtlas = pAtlas; }
 
     // Update info from the last processed frame.
     void Update(Tracking *pTracker);

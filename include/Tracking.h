@@ -78,6 +78,7 @@ public:
     void SetLocalMapper(LocalMapping* pLocalMapper);
     void SetLoopClosing(LoopClosing* pLoopClosing);
     void SetViewer(Viewer* pViewer);
+    void SetAtlas(Atlas* pAtlas) { mpAtlas = pAtlas; }
     void SetStepByStep(bool bSet);
     bool GetStepByStep();
 

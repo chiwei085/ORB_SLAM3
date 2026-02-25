@@ -40,6 +40,7 @@ public:
     MapDrawer(Atlas* pAtlas, const string &strSettingPath, Settings* settings);
 
     void newParameterLoader(Settings* settings);
+    void SetAtlas(Atlas* pAtlas) { mpAtlas = pAtlas; }
 
     Atlas* mpAtlas;
 

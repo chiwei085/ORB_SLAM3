@@ -33,6 +33,7 @@
 #include <pangolin/pangolin.h>
 
 #include <iomanip>
+#include <cctype>
 #include <sstream>
 #include <thread>
 
@@ -41,6 +42,25 @@
 
 namespace ORB_SLAM3
 {
+
+namespace {
+
+bool HasOsaExtension(const std::string& path) {
+    if (path.size() < 4) {
+        return false;
+    }
+    const auto tail = path.substr(path.size() - 4);
+    return std::tolower(static_cast<unsigned char>(tail[0])) == '.' &&
+           std::tolower(static_cast<unsigned char>(tail[1])) == 'o' &&
+           std::tolower(static_cast<unsigned char>(tail[2])) == 's' &&
+           std::tolower(static_cast<unsigned char>(tail[3])) == 'a';
+}
+
+std::string StripOsaExtension(const std::string& path) {
+    return HasOsaExtension(path) ? path.substr(0, path.size() - 4) : path;
+}
+
+}  // namespace
 
 Verbose::eLevel Verbose::th = Verbose::VERBOSITY_NORMAL;
 
@@ -1430,6 +1450,62 @@ auto System::GetAtlas() -> Atlas* {
 
 auto System::GetAtlas() const -> const Atlas* {
     return mpAtlas;
+}
+
+auto System::LoadAtlasFromFile(const std::string& filename) -> bool {
+    if (filename.empty()) {
+        cout << "LoadAtlasFromFile: empty filename" << endl;
+        return false;
+    }
+
+    const string previousLoadPath = mStrLoadAtlasFromFile;
+    Atlas* previousAtlas = mpAtlas;
+
+    mStrLoadAtlasFromFile = StripOsaExtension(filename);
+    mpAtlas = nullptr;
+
+    const bool isRead = LoadAtlas(FileType::BINARY_FILE);
+    if (!isRead) {
+        if (mpAtlas && mpAtlas != previousAtlas) {
+            delete mpAtlas;
+        }
+        mpAtlas = previousAtlas;
+        mStrLoadAtlasFromFile = previousLoadPath;
+        return false;
+    }
+
+    if (!mpAtlas) {
+        cout << "LoadAtlasFromFile: load returned success but atlas is null"
+             << endl;
+        mpAtlas = previousAtlas;
+        mStrLoadAtlasFromFile = previousLoadPath;
+        return false;
+    }
+
+    if (mSensor == IMU_STEREO || mSensor == IMU_MONOCULAR ||
+        mSensor == IMU_RGBD)
+        mpAtlas->SetInertialSensor();
+
+    // Keep constructor-load behavior: preserve loaded maps and create a fresh
+    // active map for future tracking.
+    mpAtlas->CreateNewMap();
+
+    if (mpFrameDrawer)
+        mpFrameDrawer->SetAtlas(mpAtlas);
+    if (mpMapDrawer)
+        mpMapDrawer->SetAtlas(mpAtlas);
+    if (mpTracker)
+        mpTracker->SetAtlas(mpAtlas);
+    if (mpLocalMapper)
+        mpLocalMapper->SetAtlas(mpAtlas);
+    if (mpLoopCloser)
+        mpLoopCloser->SetAtlas(mpAtlas);
+
+    if (previousAtlas && previousAtlas != mpAtlas) {
+        delete previousAtlas;
+    }
+
+    return true;
 }
 
 vector<cv::KeyPoint> System::GetTrackedKeyPointsUn() {
