@@ -1424,6 +1424,14 @@ vector<MapPoint*> System::GetTrackedMapPoints() {
     return mTrackedMapPoints;
 }
 
+auto System::GetAtlas() -> Atlas* {
+    return mpAtlas;
+}
+
+auto System::GetAtlas() const -> const Atlas* {
+    return mpAtlas;
+}
+
 vector<cv::KeyPoint> System::GetTrackedKeyPointsUn() {
     unique_lock<mutex> lock(mMutexState);
     return mTrackedKeyPointsUn;
