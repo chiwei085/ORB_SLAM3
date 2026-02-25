@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 project(ORB_SLAM3 LANGUAGES C CXX)
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -121,14 +124,24 @@ include/Settings.h)
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/CameraModels>
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/Thirdparty/Sophus>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/CameraModels>
+)
+
+add_subdirectory(Thirdparty/DBoW2)
 add_subdirectory(Thirdparty/g2o)
 
-target_link_libraries(${PROJECT_NAME}
+target_link_libraries(${PROJECT_NAME} PRIVATE
 ${OpenCV_LIBS}
 ${EIGEN3_LIBS}
 ${Pangolin_LIBRARIES}
-${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+DBoW2
+g2o
 -lboost_serialization
 -lcrypto
 )
@@ -138,10 +151,72 @@ if(realsense2_FOUND)
     include_directories(${PROJECT_NAME}
     ${realsense_INCLUDE_DIR}
     )
-    target_link_libraries(${PROJECT_NAME}
+    target_link_libraries(${PROJECT_NAME} PRIVATE
     ${realsense2_LIBRARY}
     )
 endif()
+
+install(TARGETS ${PROJECT_NAME} DBoW2 g2o
+  EXPORT ORB_SLAM3Targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(DIRECTORY include/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+)
+
+install(DIRECTORY
+  Thirdparty/DBoW2/DBoW2
+  Thirdparty/DBoW2/DUtils
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Thirdparty/DBoW2
+)
+
+install(DIRECTORY Thirdparty/Sophus/sophus
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(DIRECTORY Thirdparty/Sophus/sophus
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Thirdparty/Sophus
+)
+
+install(DIRECTORY Thirdparty/g2o/g2o
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Thirdparty/g2o
+  FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.hpp"
+)
+
+install(FILES Thirdparty/g2o/config.h
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Thirdparty/g2o
+)
+
+configure_package_config_file(
+  ${PROJECT_SOURCE_DIR}/cmake/ORB_SLAM3Config.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3Config.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ORB_SLAM3
+)
+
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3ConfigVersion.cmake
+  VERSION 0.0.0
+  COMPATIBILITY AnyNewerVersion
+)
+
+install(EXPORT ORB_SLAM3Targets
+  NAMESPACE ORB_SLAM3::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ORB_SLAM3
+)
+
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3Config.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/ORB_SLAM3ConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ORB_SLAM3
+)
 
 
 # Build examples
